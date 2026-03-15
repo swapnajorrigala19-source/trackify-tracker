@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Budgets - Trackify{% endblock %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h2>Budgets ({{ current_month }})</h2>
+</div>
+
+<div class="card" style="margin-bottom: 2rem; padding: 1.5rem;">
+    <h3 style="margin-bottom: 1rem;">Set / Update Budget</h3>
+    <form method="POST" action="{{ url_for('budgets') }}"
+        style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
+        <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 150px;">
+            <label>Category</label>
+            <select name="category" id="category" class="form-control">
+                <option value="" disabled selected>Select Category</option>
+                {% for category in categories %}
+                <option value="{{ category.id }}">{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div
+            style="display: flex; align-items: center; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.5rem; padding: 0 0.5rem;">
+            OR</div>
+        <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 150px;">
+            <label>New Category</label>
+            <input type="text" name="new_category" id="new_category" class="form-control"
+                placeholder="Create custom...">
+        </div>
+        <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 200px;">
+            <label>Monthly Limit (₹)</label>
+            <input type="number" step="0.01" name="limit" class="form-control" required placeholder="e.g. 5000">
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Budget</button>
+        </div>
+    </form>
+</div>
+
+<div class="stats-grid">
+    {% for budget in budgets %}
+    <div class="stat-card">
+        <h3>{{ budget['category_name'] }}</h3>
+        <div style="margin: 1rem 0;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                <span class="text-muted">Spent: <strong style="color: var(--danger);">₹{{ "%.2f"|format(budget['spent'])
+                        }}</strong></span>
+                <span class="text-muted">Limit: <strong>₹{{ "%.2f"|format(budget['limit']) }}</strong></span>
+            </div>
+            <div
+                style="width: 100%; background: var(--border-color); height: 10px; border-radius: 5px; overflow: hidden;">
+                {% set percent = (budget['spent'] / budget['limit'] * 100) if budget['limit'] > 0 else 0 %}
+                <div
+                    style="height: 100%; background: {% if percent > 90 %}var(--danger){% elif percent > 75 %}var(--warning){% else %}var(--success){% endif %}; width: {{ [percent, 100]|min }}%;">
+                </div>
+            </div>
+            <p style="text-align: right; font-size: 0.85rem; margin-top: 0.5rem;">{{ "%.1f"|format(percent) }}%</p>
+        </div>
+    </div>
+    {% else %}
+    <div class="card" style="grid-column: 1 / -1; text-align: center;">
+        <p>No budgets set for this month.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+    document.querySelector('form').addEventListener('submit', function (e) {
+        var catSelect = document.getElementById('category').value;
+        var newCat = document.getElementById('new_category').value.trim();
+        if (!catSelect && !newCat) {
+            e.preventDefault();
+            alert('Please select an existing category or type a name to create a new custom category.');
+        }
+    });
+</script>
+{% endblock %}

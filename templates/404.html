@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Page Not Found - Trackify{% endblock %}
+{% block content %}
+<div class="hero-section"
+    style="min-height: 50vh; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+    <i class="fas fa-search" style="font-size: 5rem; color: var(--primary); margin-bottom: 2rem;"></i>
+    <h1 class="text-gradient">404 - Page Not Found</h1>
+    <p style="font-size: 1.2rem; margin-top: 1rem; color: var(--text-muted); text-align: center; max-width: 600px;">
+        The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.
+    </p>
+    <div style="margin-top: 2rem;">
+        <a href="{{ url_for('index') }}" class="btn btn-primary">Go Home</a>
+        <a href="javascript:history.back()" class="btn btn-outline" style="margin-left: 1rem;">Go Back</a>
+    </div>
+</div>
+{% endblock %}

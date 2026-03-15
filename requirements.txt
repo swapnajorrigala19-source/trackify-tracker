@@ -1,0 +1,12 @@
+flask
+flask-sqlalchemy
+mysql-connector-python
+flask-login
+flask-bcrypt
+python-dotenv
+pandas
+openpyxl
+fpdf
+reportlab
+gunicorn
+psycopg2-binary
