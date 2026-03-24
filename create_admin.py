@@ -1,5 +1,5 @@
 import os
-from app import app, db, User, bcrypt
+from website import app, db, User, bcrypt
 
 with app.app_context():
     admin = User.query.filter_by(role='admin').first()

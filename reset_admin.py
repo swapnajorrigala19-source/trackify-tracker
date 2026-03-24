@@ -1,4 +1,4 @@
-from app import app, db, User, bcrypt
+from website import app, db, User, bcrypt
 
 with app.app_context():
     admins = User.query.filter_by(role='admin').all()
