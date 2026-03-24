@@ -1,4 +1,3 @@
-
 # VERSION: 2.1 - FIXED ENUM ERROR
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session, abort
@@ -10,6 +9,7 @@ from datetime import datetime
 import logging
 import traceback
 from dotenv import load_dotenv
+from fpdf import FPDF
 
 load_dotenv()
 
@@ -206,10 +206,28 @@ def dashboard():
         'values': [float(c[1]) for c in cat_stats]
     }
     
-    # Chart Data: Trend (last 6 months - placeholder/simple version)
+    # Chart Data: Trend (Real data for last 6 months)
+    current_date = datetime.now()
+    trend_labels = []
+    trend_values = []
+    
+    for i in range(5, -1, -1):
+        month = (current_date.month - i - 1) % 12 + 1
+        year = current_date.year + (current_date.month - i - 1) // 12
+        month_name = datetime(year, month, 1).strftime('%b')
+        
+        monthly_total = db.session.query(db.func.sum(Expense.amount)).filter(
+            Expense.user_id == current_user.id,
+            db.extract('month', Expense.date) == month,
+            db.extract('year', Expense.date) == year
+        ).scalar() or 0
+        
+        trend_labels.append(month_name)
+        trend_values.append(float(monthly_total))
+        
     trend_data = {
-        'labels': ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-        'values': [1200, 1900, 3000, 500, 2000, 3000] # Mock data for now
+        'labels': trend_labels,
+        'values': trend_values
     }
 
     return render_template('dashboard.html', 
@@ -519,6 +537,48 @@ def export_data(format):
         df.to_excel(buffer, index=False)
         buffer.seek(0)
         return send_file(buffer, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', as_attachment=True, download_name='expenses.xlsx')
+
+    elif format == 'pdf':
+        pdf = FPDF()
+        pdf.add_page()
+        
+        # Header
+        pdf.set_font("Arial", 'B', 16)
+        pdf.cell(190, 10, txt="Trackify - Expense Report", ln=1, align="C")
+        pdf.set_font("Arial", size=10)
+        pdf.cell(190, 10, txt=f"Generated on {datetime.now().strftime('%Y-%m-%d %H:%M')}", ln=1, align="R")
+        pdf.ln(10)
+        
+        # Table Header
+        pdf.set_font("Arial", 'B', 12)
+        pdf.set_fill_color(200, 220, 255)
+        pdf.cell(30, 10, "Date", 1, 0, 'C', True)
+        pdf.cell(50, 10, "Category", 1, 0, 'C', True)
+        pdf.cell(70, 10, "Description", 1, 0, 'C', True)
+        pdf.cell(40, 10, "Amount", 1, 1, 'C', True)
+        
+        # Table Data
+        pdf.set_font("Arial", size=10)
+        total = 0
+        for e in expenses:
+            category = Category.query.get(e.category_id)
+            pdf.cell(30, 10, e.date.strftime('%Y-%m-%d'), 1)
+            pdf.cell(50, 10, category.name[:20], 1)
+            pdf.cell(70, 10, (e.description or "")[:35], 1)
+            pdf.cell(40, 10, f"INR {float(e.amount):.2f}", 1, 1, 'R')
+            total += float(e.amount)
+            
+        # Summary
+        pdf.ln(5)
+        pdf.set_font("Arial", 'B', 12)
+        pdf.cell(150, 10, "Total Expenses:", 0)
+        pdf.cell(40, 10, f"INR {total:.2f}", 0, 1, 'R')
+        
+        buffer = BytesIO()
+        pdf_str = pdf.output(dest='S').encode('latin1')
+        buffer.write(pdf_str)
+        buffer.seek(0)
+        return send_file(buffer, mimetype='application/pdf', as_attachment=True, download_name='expenses_report.pdf')
 
     flash('Export format not supported.', 'danger')
     return redirect(url_for('dashboard'))
