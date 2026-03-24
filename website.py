@@ -523,23 +523,27 @@ def export_data(format):
 
 # Database initialization
 with app.app_context():
-    db.create_all()
-    # Create default categories if none exist
-    if not Category.query.first():
-        cats = ['Food', 'Travel', 'Education', 'Bills', 'Shopping', 'Health']
-        for c in cats:
-            db.session.add(Category(name=c))
-        db.session.commit()
-        logger.info("Default categories created.")
-        
-    # Create a default admin account
-    admin = User.query.filter_by(role='admin').first()
-    if not admin:
-        hashed_admin_pw = bcrypt.generate_password_hash('admin123').decode('utf-8')
-        default_admin = User(username='AdminUser', email='admin@trackify.com', password_hash=hashed_admin_pw, role='admin')
-        db.session.add(default_admin)
-        db.session.commit()
-        logger.info("Default admin created: email='admin@trackify.com', password='admin123'")
+    try:
+        db.create_all()
+        # Create default categories if none exist
+        if not Category.query.first():
+            cats = ['Food', 'Travel', 'Education', 'Bills', 'Shopping', 'Health']
+            for c in cats:
+                db.session.add(Category(name=c))
+            db.session.commit()
+            logger.info("Default categories created.")
+            
+        # Create a default admin account
+        admin = User.query.filter_by(role='admin').first()
+        if not admin:
+            hashed_admin_pw = bcrypt.generate_password_hash('admin123').decode('utf-8')
+            default_admin = User(username='AdminUser', email='admin@trackify.com', password_hash=hashed_admin_pw, role='admin')
+            db.session.add(default_admin)
+            db.session.commit()
+            logger.info("Default admin created.")
+    except Exception as e:
+        logger.error("DB Initialization Error: " + str(e))
+        logger.error(traceback.format_exc())
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)
