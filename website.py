@@ -40,7 +40,7 @@ class User(db.Model, UserMixin):
     username = db.Column(db.String(50), unique=True, nullable=False)
     email = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.Enum('user', 'admin'), default='user')
+    role = db.Column(db.Enum('user', 'admin', name='user_roles'), default='user')
     is_active_status = db.Column(db.Boolean, default=True) # Renamed to avoid confusion with is_active from UserMixin
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -51,7 +51,7 @@ class User(db.Model, UserMixin):
 class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=False)
-    type = db.Column(db.Enum('income', 'expense'), default='expense')
+    type = db.Column(db.Enum('income', 'expense', name='category_types'), default='expense')
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     expenses = db.relationship('Expense', backref='category', lazy=True)
